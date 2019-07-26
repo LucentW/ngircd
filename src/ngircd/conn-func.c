@@ -1,6 +1,6 @@
 /*
  * ngIRCd -- The Next Generation IRC Daemon
- * Copyright (c)2001-2014 Alexander Barton (alex@barton.de) and Contributors.
+ * Copyright (c)2001-2018 Alexander Barton (alex@barton.de) and Contributors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 #endif
 #include "conn.h"
 
+#include "conf.h"
 #include "conn-func.h"
 
 /**
@@ -85,7 +86,7 @@ Conn_LastPing( CONN_ID Idx )
  * is read. This function only increases the penalty, it is not possible to
  * decrease the penalty time.
  *
- * @param Idex Connection index.
+ * @param Idx Connection index.
  * @param Seconds Seconds to add.
  * @see Conn_ResetPenalty
  */
@@ -96,6 +97,14 @@ Conn_SetPenalty(CONN_ID Idx, time_t Seconds)
 
 	assert(Idx > NONE);
 	assert(Seconds >= 0);
+
+	/* Limit new penalty to maximum configured, when less than 10 seconds. *
+	   The latter is used to limit brute force attacks, therefore we don't *
+	   want to limit that! */
+	if (Conf_MaxPenaltyTime >= 0
+	    && Seconds > Conf_MaxPenaltyTime
+	    && Seconds < 10)
+		Seconds = Conf_MaxPenaltyTime;
 
 	t = time(NULL);
 	if (My_Connections[Idx].delaytime < t)

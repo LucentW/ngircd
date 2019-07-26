@@ -1,6 +1,6 @@
 /*
  * ngIRCd -- The Next Generation IRC Daemon
- * Copyright (c)2001-2014 Alexander Barton (alex@barton.de) and Contributors.
+ * Copyright (c)2001-2019 Alexander Barton (alex@barton.de) and Contributors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -556,8 +556,8 @@ InitSinaddrListenAddr(ng_ipaddr_t *addr, const char *listen_addrstr, UINT16 Port
 	if (!ret) {
 		assert(listen_addrstr);
 		Log(LOG_CRIT,
-		    "Can't bind to [%s]:%u: can't convert ip address \"%s\"!",
-		    listen_addrstr, Port, listen_addrstr);
+		    "Can't listen on [%s]:%u: Failed to parse IP address!",
+		    listen_addrstr, Port);
 	}
 	return ret;
 }
@@ -659,6 +659,9 @@ Conn_Handler(void)
 	size_t wdatalen;
 	struct timeval tv;
 	time_t t;
+
+	Log(LOG_NOTICE, "Server \"%s\" (on \"%s\") ready.",
+	    Client_ID(Client_ThisServer()), Client_Hostname(Client_ThisServer()));
 
 	while (!NGIRCd_SignalQuit && !NGIRCd_SignalRestart) {
 		t = time(NULL);
@@ -1081,9 +1084,9 @@ Conn_Close(CONN_ID Idx, const char *LogMsg, const char *FwdMsg, bool InformClien
 		 * the calculation of in_p and out_p: in_z_k and out_z_k
 		 * are non-zero, that's guaranteed by the protocol until
 		 * compression can be enabled. */
-		if (! in_z_k)
+		if (in_z_k <= 0)
 			in_z_k = in_k;
-		if (! out_z_k)
+		if (out_z_k <= 0)
 			out_z_k = out_k;
 		in_p = (int)(( in_k * 100 ) / in_z_k );
 		out_p = (int)(( out_k * 100 ) / out_z_k );
@@ -1918,8 +1921,11 @@ Check_Servers(void)
 		Conf_Server[i].lasttry = time_now;
 		Conf_Server[i].conn_id = SERVER_WAIT;
 		assert(Proc_GetPipeFd(&Conf_Server[i].res_stat) < 0);
-		Resolve_Name(&Conf_Server[i].res_stat, Conf_Server[i].host,
-			     cb_Connect_to_Server);
+
+		/* Start resolver subprocess ... */
+		if (!Resolve_Name(&Conf_Server[i].res_stat, Conf_Server[i].host,
+				  cb_Connect_to_Server))
+			Conf_Server[i].conn_id = NONE;
 	}
 } /* Check_Servers */
 
@@ -2399,7 +2405,7 @@ Conn_GetFromProc(int fd)
  * @param Reason The reason, see THROTTLE_xxx constants.
  * @param Idx The connection index.
  * @param Client The client of this connection.
- * @param Seconds The time to delay this connection.
+ * @param Value The time to delay this connection.
  */
 static void
 Throttle_Connection(const CONN_ID Idx, CLIENT *Client, const int Reason,

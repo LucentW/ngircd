@@ -1,6 +1,6 @@
 /*
  * ngIRCd -- The Next Generation IRC Daemon
- * Copyright (c)2001-2017 Alexander Barton (alex@barton.de) and Contributors.
+ * Copyright (c)2001-2019 Alexander Barton (alex@barton.de) and Contributors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -246,25 +246,17 @@ main(int argc, const char *argv[])
 		NGIRCd_SignalRestart = false;
 		NGIRCd_SignalQuit = false;
 
-		/* Initialize modules, part I */
 		Log_Init(!NGIRCd_NoDaemon);
 		Random_Init();
 		Conf_Init();
 		Log_ReInit();
 
-		/* Initialize the "main program": chroot environment, user and
-		 * group ID, ... */
+		/* Initialize the "main program":
+		 * chroot environment, user and group ID, ... */
 		if (!NGIRCd_Init(NGIRCd_NoDaemon)) {
 			Log(LOG_ALERT, "Fatal: Initialization failed, exiting!");
 			exit(1);
 		}
-
-		/* Initialize modules, part II: these functions are eventually
-		 * called with already dropped privileges ... */
-		Channel_Init();
-		Client_Init();
-		Conn_Init();
-		Class_Init();
 
 		if (!io_library_init(CONNECTION_POOL)) {
 			Log(LOG_ALERT,
@@ -279,6 +271,11 @@ main(int argc, const char *argv[])
 			    strerror(errno));
 			exit(1);
 		}
+
+		Channel_Init();
+		Conn_Init();
+		Class_Init();
+		Client_Init();
 
 		/* Create protocol and server identification. The syntax
 		 * used by ngIRCd in PASS commands and the known "extended
@@ -451,7 +448,7 @@ static void
 Show_Version( void )
 {
 	puts( NGIRCd_Version );
-	puts( "Copyright (c)2001-2017 Alexander Barton (<alex@barton.de>) and Contributors." );
+	puts( "Copyright (c)2001-2019 Alexander Barton (<alex@barton.de>) and Contributors." );
 	puts( "Homepage: <http://ngircd.barton.de/>\n" );
 	puts( "This is free software; see the source for copying conditions. There is NO" );
 	puts( "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." );

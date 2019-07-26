@@ -1,6 +1,6 @@
 /*
  * ngIRCd -- The Next Generation IRC Daemon
- * Copyright (c)2001-2014 Alexander Barton (alex@barton.de) and Contributors.
+ * Copyright (c)2001-2019 Alexander Barton (alex@barton.de) and Contributors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -388,6 +388,7 @@ Conf_Test( void )
 	printf("  MaxConnectionsIP = %d\n", Conf_MaxConnectionsIP);
 	printf("  MaxJoins = %d\n", Conf_MaxJoins > 0 ? Conf_MaxJoins : -1);
 	printf("  MaxNickLength = %u\n", Conf_MaxNickLength - 1);
+	printf("  MaxPenaltyTime = %ld\n", Conf_MaxPenaltyTime);
 	printf("  MaxListSize = %d\n", Conf_MaxListSize);
 	printf("  PingTimeout = %d\n", Conf_PingTimeout);
 	printf("  PongTimeout = %d\n", Conf_PongTimeout);
@@ -711,7 +712,6 @@ Conf_NickIsService(int ConfServer, const char *Nick)
 /**
  * Check if the given nickname is blocked for "normal client" use.
  *
- * @param ConfServer The server index or NONE to check all configured servers.
  * @param Nick The nickname to check.
  * @returns true if the given nickname belongs to an "IRC service".
  */
@@ -766,6 +766,7 @@ Set_Defaults(bool InitServers)
 	Conf_MaxConnectionsIP = 5;
 	Conf_MaxJoins = 10;
 	Conf_MaxNickLength = CLIENT_NICK_LEN_DEFAULT;
+	Conf_MaxPenaltyTime = -1;
 	Conf_MaxListSize = 100;
 	Conf_PingTimeout = 120;
 	Conf_PongTimeout = 20;
@@ -845,7 +846,7 @@ no_listenports(void)
  *
  * This function is used to read the MOTD and help text file, for example.
  *
- * @param filename	Name of the file to read.
+ * @param Filename	Name of the file to read.
  * @return		true, when the file has been read in.
  */
 static bool
@@ -887,9 +888,9 @@ Read_TextFile(const char *Filename, const char *Name, array *Destination)
  * Please note that this function uses exit(1) on fatal errors and therefore
  * can result in ngIRCd terminating!
  *
- * @param ngircd_starting	Flag indicating if ngIRCd is starting or not.
- * @returns			true when the configuration file has been read
- *				successfully; false otherwise.
+ * @param IsStarting	Flag indicating if ngIRCd is starting or not.
+ * @returns		true when the configuration file has been read
+ *			successfully; false otherwise.
  */
 static bool
 Read_Config(bool TestOnly, bool IsStarting)
@@ -900,6 +901,8 @@ Read_Config(bool TestOnly, bool IsStarting)
 	int i, n;
 	FILE *fd;
 	DIR *dh;
+
+	Log(LOG_INFO, "Using configuration file \"%s\" ...", NGIRCd_ConfFile);
 
 	/* Open configuration file */
 	fd = fopen( NGIRCd_ConfFile, "r" );
@@ -1642,6 +1645,12 @@ Handle_LIMITS(const char *File, int Line, char *Var, char *Arg)
 			Config_Error_NaN(File, Line, Var);
 		return;
 	}
+	if (strcasecmp(Var, "MaxPenaltyTime") == 0) {
+		Conf_MaxPenaltyTime = atol(Arg);
+		if (Conf_MaxPenaltyTime < -1)
+			Conf_MaxPenaltyTime = -1;	/* "unlimited" */
+		return;
+	}
 	if (strcasecmp(Var, "PingTimeout") == 0) {
 		Conf_PingTimeout = atoi(Arg);
 		if (Conf_PingTimeout < 5) {
@@ -2225,27 +2234,14 @@ Validate_Config(bool Configtest, bool Rehash)
 		break;
 	} while (*(++ptr));
 
-	if (!Conf_ServerName[0]) {
+	if (!Conf_ServerName[0] || !strchr(Conf_ServerName, '.'))
+	{
 		/* No server name configured! */
 		config_valid = false;
 		Config_Error(LOG_ALERT,
 			     "No (valid) server name configured in \"%s\" (section 'Global': 'Name')!",
 			     NGIRCd_ConfFile);
 		if (!Configtest && !Rehash) {
-			Config_Error(LOG_ALERT,
-				     "%s exiting due to fatal errors!",
-				     PACKAGE_NAME);
-			exit(1);
-		}
-	}
-
-	if (Conf_ServerName[0] && !strchr(Conf_ServerName, '.')) {
-		/* No dot in server name! */
-		config_valid = false;
-		Config_Error(LOG_ALERT,
-			     "Invalid server name configured in \"%s\" (section 'Global': 'Name'): Dot missing!",
-			     NGIRCd_ConfFile);
-		if (!Configtest) {
 			Config_Error(LOG_ALERT,
 				     "%s exiting due to fatal errors!",
 				     PACKAGE_NAME);
@@ -2281,6 +2277,11 @@ Validate_Config(bool Configtest, bool Rehash)
 		Config_Error(LOG_ERR,
 			     "This server uses PAM, \"Password\" in [Global] section will be ignored!");
 #endif
+
+	if (Conf_MaxPenaltyTime != -1)
+		Config_Error(LOG_WARNING,
+			     "Maximum penalty increase ('MaxPenaltyTime') is set to %ld, this is not recommended!",
+			     Conf_MaxPenaltyTime);
 
 #ifdef DEBUG
 	servers = servers_once = 0;

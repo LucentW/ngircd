@@ -1,7 +1,7 @@
 .\"
 .\" ngircd.conf(5) manual page template
 .\"
-.TH ngircd.conf 5 "Jan 2017" ngIRCd "ngIRCd Manual"
+.TH ngircd.conf 5 "Jan 2019" ngIRCd "ngIRCd Manual"
 .SH NAME
 ngircd.conf \- configuration file of ngIRCd
 .SH SYNOPSIS
@@ -125,7 +125,7 @@ take effect when ngircd starts up or is instructed to re-read its
 configuration file.
 .TP
 \fBMotdPhrase\fR (string)
-A simple Phrase (<256 chars) if you don't want to use a MOTD file.
+A simple Phrase (<127 chars) if you don't want to use a MOTD file.
 .TP
 \fBNetwork\fR (string)
 The name of the IRC network to which this server belongs. This name is
@@ -200,6 +200,12 @@ Default: 10.
 Maximum length of an user nickname (Default: 9, as in RFC 2812). Please
 note that all servers in an IRC network MUST use the same maximum nickname
 length!
+.TP
+\fBMaxPenaltyTime\fR (number)
+Maximum penalty time increase in seconds, per penalty event. Set to -1 for no
+limit (the default), 0 to disable penalties altogether. ngIRCd doesn't use
+penalty increases higher than 2 seconds during normal operation, so values
+greater than 1 rarely make sense.
 .TP
 \fBMaxListSize\fR (number)
 Maximum number of channels returned in response to a LIST command. Default: 100.
@@ -341,7 +347,7 @@ Default: no.
 .TP
 \fBPAMServiceName\fR (string)
 When PAM is enabled, this value determines the used PAM configuration.
-This setting allows to run multiple ngIRCd instances with different
+This setting allows running multiple ngIRCd instances with different
 PAM configurations on each instance. If you set it to "ngircd-foo",
 PAM will use /etc/pam.d/ngircd-foo instead of the default
 /etc/pam.d/ngircd.
@@ -426,7 +432,7 @@ Example: nick!ident@*.example.com
 Other servers are configured in
 .I [Server]
 sections. If you configure a port for the connection, then this ngIRCd
-tries to connect to to the other server on the given port (active);
+tries to connect to the other server on the given port (active);
 if not, it waits for the other server to connect (passive).
 .PP
 ngIRCd supports "server groups": You can assign an "ID" to every server

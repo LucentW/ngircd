@@ -29,7 +29,7 @@
 
 /**
  * Configured IRC operator.
- * Please note the the name of the IRC operaor and his nick have nothing to
+ * Please note that the name of the IRC operaor and his nick have nothing to
  * do with each other! The IRC operator is only identified by the name and
  * password configured in this structure.
  */
@@ -238,6 +238,9 @@ GLOBAL unsigned int Conf_MaxNickLength;
 
 /** Maximum number of channels returned to /list */
 GLOBAL int Conf_MaxListSize;
+
+/** Maximium seconds to add per "penalty". -1 = unlimited. */
+GLOBAL time_t Conf_MaxPenaltyTime;
 
 #ifndef STRICT_RFC
 

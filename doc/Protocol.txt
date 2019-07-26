@@ -2,7 +2,7 @@
                      ngIRCd - Next Generation IRC Server
                            http://ngircd.barton.de/
 
-               (c)2001-2012 Alexander Barton and Contributors.
+               (c)2001-2019 Alexander Barton and Contributors.
                ngIRCd is free software and published under the
                    terms of the GNU General Public License.
 
@@ -25,6 +25,12 @@ If you don't like this behavior please ./configure the ngIRCd using the
 clients are compatible with a server configured that way, some can't even
 connect at all! Therefore this option usually isn't desired for "normal
 server operation".
+
+In addition, ngIRCd implements some "IRCv3" features. This includes:
+ - IRCv3 Client Capability Negotiation
+ - IRCv3.1 multi-prefix Extension
+ - IRCv3.2 userhost-in-names Extension
+Please see the IRCv3 homepage for more information: <https://ircv3.net>.
 
 
 II. The IRC+ Protocol
@@ -176,7 +182,7 @@ channel mode). In this case <limit> should be "0".
 II.4 Update webchat/proxy client information
 
      Command: WEBIRC
-  Parameters: <password> <username> <hostname> <ip-address>
+  Parameters: <password> <username> <hostname> <ip-address> [<ignored>]
      Used by: unregistered clients only
 
 The WEBIRC command is used by some Web-to-IRC gateways to set the correct
@@ -185,6 +191,9 @@ first command sent to the server, even before USER and NICK commands!
 
 The <password> must be set in the server configuration file to prevent
 unauthorized clients to fake their identity; it is an arbitrary string.
+
+Optionally, a 5th parameter is accepted to comply with an IRCv3 extension,
+see <https://github.com/ircv3/ircv3-ideas/issues/12>, but ignored.
 
 
 II.5 Client character encoding conversion

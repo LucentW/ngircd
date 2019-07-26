@@ -2,7 +2,7 @@
                      ngIRCd - Next Generation IRC Server
                            http://ngircd.barton.de/
 
-               (c)2001-2017 Alexander Barton and Contributors.
+               (c)2001-2019 Alexander Barton and Contributors.
                ngIRCd is free software and published under the
                    terms of the GNU General Public License.
 
@@ -13,7 +13,7 @@ Note:
 If you have comments, patches or something else, please feel free to post
 a mail to the ngIRCd mailing list: <ngircd-ml@ngircd.barton.de> (please see
 <http://ngircd.barton.de/support.php> for details) or join the ngIRCd IRC
-channel: <irc://irc.barton.de/ngircd>.
+channel "#ngircd" on irc.barton.de: <irc://irc.barton.de/ngircd>.
 
 Don't mail the people listed here directly, if possible!
 
@@ -29,6 +29,7 @@ Contributors
 Ali Shemiran <ashemira@ucsd.edu>
 Ask Bjørn Hansen <ask@develooper.com>
 Benjamin Pineau <ben@zouh.org>
+Bernd Kuhls <bernd.kuhls@t-online.de>
 Brandon Beresini <beresini@google.com>
 Brett Smith <brett@w3.org>
 Brian Collins <bricollins@gmail.com>
@@ -41,25 +42,29 @@ DNS <dns@rbose.org>
 Eric Grunow <egrunow@ucsd.edu>
 Federico G. Schwindt <fgsch@lodoss.net>
 Gabor Adam Toth <tg@tgbit.net>
-Goetz Hoffart <goetz@hoffart.de>
+Götz Hoffart <goetz@hoffart.de>
 Ian Chard <ian@chard.org>
 Ilja Osthoff <i.osthoff@gmx.net>
+ItsOnlyBinary <ItsOnlyBinary@users.noreply.github.com>
+James Lu <james@overdrivenetworks.com>
 Jari Aalto <jari.aalto@cante.net>
 LucentW <lucent@zebes.info>
 Mantas Mikulėnas <grawity@gmail.com>
 Neale Pickett <neale@woozle.org>
 Peter Powell <petpow@saberuk.com>
 Rolf Eike Beer <eike@sf-mail.de>
+Rosen Penev <rosenp@gmail.com>
 Roy Sindre Norangshol <roy.sindre@norangshol.no>
 Scott Perry <scperry@ucsd.edu>
 Sean Reifschneider <jafo-rpms@tummy.com>
 Sebastian Köhler <sebkoehler@whoami.org.uk>
+shankari <shankari@eecs.berkeley.edu>
 Tassilo Schweyer <dev@welterde.de>
 Tom Ryder <tom@sanctum.geek.nz>
 Unit 193 <unit193@ubuntu.com>
 William Pitcock <nenolod@dereferenced.org>
-Yecheng Fu <cofyc.jackson@gmail.com>
 xor <xorboy@gmail.com>
+Yecheng Fu <cofyc.jackson@gmail.com>
 
 
 Code snippets

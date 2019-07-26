@@ -2,12 +2,77 @@
                      ngIRCd - Next Generation IRC Server
                            http://ngircd.barton.de/
 
-               (c)2001-2017 Alexander Barton and Contributors.
+               (c)2001-2019 Alexander Barton and Contributors.
                ngIRCd is free software and published under the
                    terms of the GNU General Public License.
 
                                -- ChangeLog --
 
+
+ngIRCd 25 (2019-01-23)
+
+  - Fix documentation of MotdPhrase length, which actually is 126 characters:
+    update sample configuration file as well as the man page. Thanks to
+    shankari <shankari@eecs.berkeley.edu>.
+    Closes #254.
+  - Implement new configuration option "MaxPenaltyTime", which configures the
+    maximum penalty time increase in seconds, per penalty event. Set to -1 for
+    no limit (the default), 0 to disable penalties altogether. ngIRCd doesn't
+    use penalty increases higher than 2 seconds during normal operation, so
+    values higher than 1 rarely make sense.
+    Disabling (or reducing) penalties can greatly speed up "make check" runs
+    for example, see below, but are mostly a debugging feature and normally
+    not meant to be used on production systems!
+    Some example timings running "make check" from my macOS workstation:
+     - MaxPenaltyTime not set: 4:41,79s
+     - "MaxPenaltyTime = 1":   3:14,71s
+     - "MaxPenaltyTime = 0":     25,46s
+    Closes #249 and #251.
+  - Fix compilation without deprecated OpenSSL APIs. Thanks to Rosen Penev
+    <rosenp@gmail.com> for the patch!
+    Closes #252.
+  - Update Xcode project for latest Xcode version (10.0)
+  - Fix some compiler warnings of Apple Xcode/Clang
+  - Allow a 5th parameter in WEBIRC. Thanks to "ItsOnlyBinary".
+    Closes #247.
+  - Update some more documentation files and source code comments.
+  - Platforms.txt: Add and update systems.
+
+  ngIRCd 25~rc1 (2018-08-11)
+  - Update config.guess (2018-03-08) and config.sub (2018-03-08) files.
+  - Correctly retry to establish an outgoing connections when forking of the
+    resolver sub-process failed (for example because of lack of free memory).
+    Until now, such a connection was never retried once this error was hit.
+    Thanks to Robert Obermeier for reporting this bug!
+    Closes #243.
+  - Fix a "use after free" bug which can be triggered on a newly established
+    connection when the daemon handles an ERROR command received from the peer
+    during client login. Thanks a lot to Joseph Bisch <joseph.bisch@gmail.com>
+    for discovering and reporting this issue!
+  - Only send TOPIC updates to a channel when the topic actually changed:
+    This prevents the channel from becoming flooded by unnecessary TOPIC update
+    messages, that can happen when IRC services try to enforce a certain topic
+    but which is already set (at least on the local server), for example.
+    Therefore still forward it to all servers, but don't inform local clients
+    (still update setter and timestamp information, though).
+  - Update Xcode project for latest Xcode version (9.2). This includes adding
+    missing and deleting obsolete file references.
+  - Handle user mode "C" ("Only users that share a channel are allowed to send
+    messages") like user mode "b" ("block private messages and notices"): allow
+    messages from servers, services, and IRC Operators, too. Change proposed by
+    "wowaname" back in 2015 in #ngircd, thanks!
+  - Fix some compiler warnings.
+  - Add contrib/ngircd.logcheck: Some sample logcheck(8) rules.
+  - Allow IRC Ops and remote servers to KILL service clients: such clients
+    behave like regular users, therefore IRC operators and servers should be
+    able to KILL them: for example to resolve nick collisions.
+    Closes #242.
+  - Don't forward KILLs to other servers if they've been blocked locally:
+    This prevents clients from killing IRC services, for example.
+    Closes #238 and #239.
+  - Fix a cross-compiler issue related to the Get_Error() function.
+    Closes #240 and #241.
+  - Update ./doc/Services.txt, enhance configuration examples.
 
 ngIRCd 24 (2017-01-20)
 
@@ -136,7 +201,7 @@ ngIRCd 23 (2015-11-16)
     Idea and implementation by LucentW, Thanks! Closes #207.
   - Update ngircd.conf.5: "CloakUserToNick" hides user _and_ real name.
     This closes #208.
-  - Fix case insensitive pattern matching: Up to now, only the the input
+  - Fix case insensitive pattern matching: Up to now, only the input
     string became lowercased and was then compared to the pattern -- which
     failed when the pattern itself wasn't all lowercase!
   - Streamline the effect of "MorePrivacy" option: Update documentation
@@ -489,7 +554,7 @@ ngIRCd 20.3 (2013-08-23)
 ngIRCd 20.2 (2013-02-15)
 
   - Security: Fix a denial of service bug in the function handling KICK
-    commands that could be used by arbitrary users to to crash the daemon
+    commands that could be used by arbitrary users to crash the daemon
     (CVE-2013-1747).
   - WHO command: Use the currently "displayed hostname" (which can be cloaked!)
     for hostname matching, not the real one. In other words: don't display all

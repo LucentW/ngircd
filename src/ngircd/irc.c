@@ -1,6 +1,6 @@
 /*
  * ngIRCd -- The Next Generation IRC Daemon
- * Copyright (c)2001-2015 Alexander Barton (alex@barton.de) and Contributors.
+ * Copyright (c)2001-2018 Alexander Barton (alex@barton.de) and Contributors.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ IRC_ERROR(CLIENT *Client, REQUEST *Req)
 	}
 
 	if (Client_Conn(Client) != NONE) {
-		Client_Destroy(Client, NULL, msg, false);
+		Conn_Close(Client_Conn(Client), NULL, msg, false);
 		return DISCONNECTED;
 	}
 
@@ -362,12 +362,8 @@ IRC_KillClient(CLIENT *Client, CLIENT *From, const char *Nick, const char *Reaso
 		return CONNECTED;
 	}
 
-	/* Inform other servers */
-	IRC_WriteStrServersPrefix(From ? Client : NULL,
-				  From ? From : Client_ThisServer(),
-				  "KILL %s :%s", Nick, Reason);
-
-	if (Client_Type(c) != CLIENT_USER && Client_Type(c) != CLIENT_GOTNICK) {
+	if (Client_Type(c) != CLIENT_USER && Client_Type(c) != CLIENT_GOTNICK
+	    && Client_Type(c) != CLIENT_SERVICE) {
 		/* Target of this KILL is not a regular user, this is
 		 * invalid! So we ignore this case if we received a
 		 * regular KILL from the network and try to kill the
@@ -387,6 +383,12 @@ IRC_KillClient(CLIENT *Client, CLIENT *From, const char *Nick, const char *Reaso
 		    "Got KILL for invalid client type: %d, \"%s\"!",
 		    Client_Type(c), Nick);
 	}
+
+	/* Inform other servers */
+	IRC_WriteStrServersPrefix(From ? Client : NULL,
+				  From ? From : Client_ThisServer(),
+				  "KILL %s :%s", Nick, Reason);
+
 
 	/* Save ID of this connection */
 	if (Client)
@@ -413,7 +415,7 @@ IRC_KillClient(CLIENT *Client, CLIENT *From, const char *Nick, const char *Reaso
  * Send help for a given topic to the client.
  *
  * @param Client The client requesting help.
- * @param Topoc The help topic requested.
+ * @param Topic The help topic requested.
  * @return CONNECTED or DISCONNECTED.
  */
 static bool
@@ -481,11 +483,8 @@ Help(CLIENT *Client, const char *Topic)
  * @return Pointer to static (global) string buffer.
  */
 static char *
-#ifdef ZLIB
+#if defined(SSL_SUPPORT) || defined(ZLIB)
 Option_String(CONN_ID Idx)
-#else
-Option_String(UNUSED CONN_ID Idx)
-#endif
 {
 	static char option_txt[8];
 	UINT16 options;
@@ -505,6 +504,11 @@ Option_String(UNUSED CONN_ID Idx)
 #endif
 
 	return option_txt;
+#else
+Option_String(UNUSED CONN_ID Idx)
+{
+	return "";
+#endif
 } /* Option_String */
 
 /**
@@ -690,7 +694,10 @@ Send_Message(CLIENT * Client, REQUEST * Req, int ForceType, bool SendErrors)
 				goto send_next_target;
 			}
 
-			if (Client_HasMode(cl, 'C')) {
+			if (Client_HasMode(cl, 'C') &&
+			    !Client_HasMode(from, 'o') &&
+			    !(Client_Type(from) == CLIENT_SERVER) &&
+			    !(Client_Type(from) == CLIENT_SERVICE)) {
 				cl2chan = Channel_FirstChannelOf(cl);
 				while (cl2chan) {
 					chan = Channel_GetChannel(cl2chan);

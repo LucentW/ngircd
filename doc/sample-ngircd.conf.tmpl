@@ -51,7 +51,7 @@
 	# be shown to all users connecting to the server:
 	;MotdFile = :ETCDIR:/ngircd.motd
 
-	# A simple Phrase (<256 chars) if you don't want to use a motd file.
+	# A simple Phrase (<127 chars) if you don't want to use a motd file.
 	;MotdPhrase = "Hello world!"
 
 	# The name of the IRC network to which this server belongs. This name
@@ -116,6 +116,12 @@
 	# Please note that all servers in an IRC network MUST use the same
 	# maximum nickname length!
 	;MaxNickLength = 9
+
+	# Maximum penalty time increase in seconds, per penalty event. Set to -1
+	# for no limit (the default), 0 to disable penalties altogether. The
+	# daemon doesn't use penalty increases higher than 2 seconds during
+	# normal operation, so values greater than 1 rarely make sense.
+	;MaxPenaltyTime = -1
 
 	# Maximum number of channels returned in response to a /list
 	# command (0: unlimited):
@@ -303,7 +309,7 @@
 [Server]
 	# Other servers are configured in [Server] sections. If you
 	# configure a port for the connection, then this ngircd tries to
-	# connect to to the other server on the given port; if not it waits
+	# connect to the other server on the given port; if not it waits
 	# for the other server to connect.
 	# There may be more than one server block, one for each server.
 	#

@@ -108,9 +108,8 @@ Resolve_Name( PROC_STAT *s, const char *Host, void (*cbfunc)(int, short))
 	return false;
 } /* Resolve_Name */
 
-
-#if !defined(HAVE_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
-#if !defined(WANT_IPV6) && defined(h_errno)
+#if !defined(HAVE_WORKING_GETADDRINFO) || !defined(HAVE_GETNAMEINFO)
+#ifdef h_errno
 static char *
 Get_Error( int H_Error )
 {
@@ -233,7 +232,11 @@ ReverseLookup(const ng_ipaddr_t *IpAddr, char *resbuf, size_t reslen)
  * @return true if lookup successful, false if domain name not found
  */
 static bool
+#ifdef HAVE_WORKING_GETADDRINFO
 ForwardLookup(const char *hostname, array *IpAddr, int af)
+#else
+ForwardLookup(const char *hostname, array *IpAddr, UNUSED int af)
+#endif
 {
 	ng_ipaddr_t addr;
 
